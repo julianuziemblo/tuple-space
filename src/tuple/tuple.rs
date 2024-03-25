@@ -1,3 +1,4 @@
+use core::num;
 use std::ops::{Index, IndexMut};
 
 const UNDEFINED: u8 = 0b00;
@@ -154,33 +155,32 @@ impl<'a> Tuple<'a> {
         true
     }
 
-    fn i32_to_bytes(num: i32) -> [u8; 4] {
-        let mut res = [0u8; 4];
-        for i in 0..4 {
-            let shift = 8 * (4 - i - 1);
-            let mask = 0b11111111;
-            res[i] = ((num >> shift) & mask) as u8;
-        }
-
-        res
-    }
-
     pub fn as_bytes(&self) -> Vec<u8> {
         let mut res = vec![];
         res.extend(self.name.as_bytes());
 
         for field in self.fields.iter() {
             // TODO: convert fields into byte representations
-            res.extend(match field {
-                TupleField::Int(optional_value) => match optional_value {
-                    Some(value) => {
-                        vec![INT, TUPLE_FIELD_OCCUPIED_YES, Self::i32_to_bytes(*value)]
-                    }
-
-                    None => vec![UNDEFINED, TUPLE_FIELD_OCCUPIED_NO],
+            use TupleField as TF;
+            let mut bytes = vec![];
+            match field {
+                TF::Int(val) => {
+                    bytes.push(INT);
+                    match val {
+                        Some(v) => {bytes.push(TUPLE_FIELD_OCCUPIED_YES); bytes.extend(v.to_ne_bytes())},
+                        None => bytes.push(TUPLE_FIELD_OCCUPIED_NO),
+                    }; 
                 },
-                _ => vec![],
-            });
+                TF::Float(val) => {
+                    bytes.push(FLOAT);
+                    match val {
+                        Some(v) => {bytes.push(TUPLE_FIELD_OCCUPIED_YES); bytes.extend(v.to_ne_bytes())},
+                        None => bytes.push(TUPLE_FIELD_OCCUPIED_NO),
+                    }; 
+                },
+                TF::Undefined => bytes.push(TUPLE_FIELD_OCCUPIED_NO),
+            };
+            res.extend(bytes);
         }
 
         res
