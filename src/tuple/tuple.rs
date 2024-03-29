@@ -28,6 +28,12 @@ impl DisplayBinary for Vec<u8> {
     }
 }
 
+pub trait Serializable: Sized {
+    type Error;
+    fn serialize(&self) -> Vec<u8>;
+    fn deserialize(bytes: &[u8]) -> Result<Self, Self::Error>;
+}
+
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum TupleField {
     Int(Option<i32>),
@@ -73,7 +79,7 @@ impl Index<usize> for Tuple {
     }
 }
 
-impl<'a> IndexMut<usize> for Tuple {
+impl IndexMut<usize> for Tuple {
     fn index_mut(&mut self, index: usize) -> &mut Self::Output {
         &mut self.fields[index]
     }
@@ -186,8 +192,11 @@ impl Tuple {
 
         true
     }
+}
 
-    pub fn as_bytes(&self) -> Vec<u8> {
+impl Serializable for Tuple {
+    type Error = TupleParseError;
+    fn serialize(&self) -> Vec<u8> {
         let mut res = vec![];
 
         // name
@@ -239,7 +248,7 @@ impl Tuple {
         res
     }
 
-    pub fn from_bytes(bytes: &[u8]) -> Result<Self, TupleParseError> {
+    fn deserialize(bytes: &[u8]) -> Result<Self, Self::Error> {
         let mut name_accum = String::new();
         let mut bytes = bytes.iter();
         let mut name_is_valid = false;

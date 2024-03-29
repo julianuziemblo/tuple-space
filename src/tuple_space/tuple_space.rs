@@ -1,4 +1,4 @@
-use crate::tuple::tuple::Tuple;
+use crate::tuple::tuple::{Serializable, Tuple};
 
 // TUPLE SPACE REQUEST TYPES
 const TS_REQ_EMPTY: u32 = 0b000;
@@ -62,5 +62,21 @@ impl TuplePacket {
             parity: Self::calculate_parity(&tuple),
             tuple: Some(tuple),
         }
+    }
+}
+
+impl Serializable for TuplePacket {
+    type Error = ();
+
+    fn serialize(&self) -> Vec<u8> {
+        // match &self.tuple {
+        //     Some(t) => t.serialize(),
+        //     None => vec![],
+        // }
+        todo!()
+    }
+
+    fn deserialize(bytes: &[u8]) -> Result<Self, Self::Error> {
+        todo!()
     }
 }
