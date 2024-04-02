@@ -327,7 +327,7 @@ impl Serializable for Tuple {
 }
 
 #[cfg(test)]
-mod test {
+mod tests {
     use crate::{
         tuple::tuple::{Tuple, TupleField},
         util::Serializable,
@@ -357,7 +357,7 @@ mod test {
     fn tuple_from_str_natalia_test() {
         let t1 = Tuple::from_str("('japierdole', INT 69, FLOAT 21.37, INT ?)");
 
-        println!("t1={t1:?}");
+        // println!("t1={t1:?}");
 
         assert!(t1.is_ok())
     }
