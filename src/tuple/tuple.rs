@@ -26,8 +26,6 @@ impl DisplayBinary for Vec<u8> {
     }
 }
 
-
-
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub enum TupleField {
     Int(Option<i32>),
@@ -325,5 +323,33 @@ impl Serializable for Tuple {
         }
 
         Ok(Self { name, fields })
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use crate::{
+        tuple::tuple::{Tuple, TupleField},
+        util::Serializable,
+    };
+
+    #[test]
+    fn tuple_creation_test() {
+        let mut tuple_manual = Tuple::new("t1", 2);
+        tuple_manual.insert(0, TupleField::Float(Some(6.276)));
+        tuple_manual.insert(1, TupleField::Int(None));
+
+        let tuple_auto = Tuple::from_str("('t1', float 6.276, int ?)").unwrap();
+        
+        assert_eq!(tuple_manual, tuple_auto);        
+    }
+
+    #[test]
+    fn tuple_serialization_test() {
+        let t1 = Tuple::from_str("('t1', float 6.276, int ?)").unwrap();
+        let t1_bytes = t1.serialize();
+        let t1_from_bytes = Tuple::deserialize(&t1_bytes).unwrap();
+
+        assert_eq!(t1, t1_from_bytes)
     }
 }
