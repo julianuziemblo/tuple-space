@@ -114,7 +114,7 @@ impl Tuple {
             let token = token.trim();
             // println!("[FROM_STR] token: {token}");
             fields.push(match token {
-                "undefined" | "?" => TupleField::Undefined,
+                "undefined" | "undef" | "UNDEFINED" | "UNDEF" | "?" => TupleField::Undefined,
                 _ => {
                     let mid = token.find(' ').ok_or(TupleParseError::InvalidFormat)?;
                     let (typename, str_value) = token.split_at(mid);
@@ -122,14 +122,14 @@ impl Tuple {
                     // println!("typename: {:?}, str_value: {:?}", typename, str_value);
 
                     match typename {
-                        "int" => TupleField::Int(match str_value.trim() {
+                        "int" | "INT" => TupleField::Int(match str_value.trim() {
                             "?" => None,
                             _ => Some(match str_value.parse() {
                                 Ok(v) => v,
                                 Err(_) => return Err(TupleParseError::ValueParseError),
                             }),
                         }),
-                        "float" => TupleField::Float(match str_value.trim() {
+                        "float" | "FLOAT" => TupleField::Float(match str_value.trim() {
                             "?" => None,
                             _ => Some(match str_value.parse() {
                                 Ok(v) => v,
@@ -340,8 +340,8 @@ mod test {
         tuple_manual.insert(1, TupleField::Int(None));
 
         let tuple_auto = Tuple::from_str("('t1', float 6.276, int ?)").unwrap();
-        
-        assert_eq!(tuple_manual, tuple_auto);        
+
+        assert_eq!(tuple_manual, tuple_auto);
     }
 
     #[test]
@@ -351,5 +351,30 @@ mod test {
         let t1_from_bytes = Tuple::deserialize(&t1_bytes).unwrap();
 
         assert_eq!(t1, t1_from_bytes)
+    }
+
+    #[test]
+    fn tuple_from_str_natalia_test() {
+        let t1 = Tuple::from_str("('japierdole', INT 69, FLOAT 21.37, INT ?)");
+
+        println!("t1={t1:?}");
+
+        assert!(t1.is_ok())
+    }
+
+    #[test]
+    fn tuple_match_test() {
+        let tuple = Tuple::from_str("('t1', int 123, float 213.7)").unwrap();
+        let tuple_template = Tuple::from_str("('t1', int ?, float 213.7)").unwrap();
+
+        assert!(tuple.matches(&tuple_template))
+    }
+
+    #[test]
+    fn tuple_not_matches_test() {
+        let tuple = Tuple::from_str("('t1', int 123, float 213.7)").unwrap();
+        let tuple_template = Tuple::from_str("('t1', float 213.7, int 123)").unwrap();
+
+        assert!(! tuple.matches(&tuple_template))
     }
 }
