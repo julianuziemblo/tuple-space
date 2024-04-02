@@ -1,5 +1,7 @@
 use std::ops::{Index, IndexMut};
 
+use crate::util::{DisplayBinary, Serializable};
+
 const TUPLE_NAME_MAX_SIZE: usize = 31;
 
 const TUPLE_TYPE_UNDEFINED: u8 = 0b000;
@@ -11,10 +13,6 @@ const TUPLE_FIELD_OCCUPIED_NO: u8 = 0b0;
 
 const TUPLE_FIELD_OCCUPIED_SHIFT: usize = 7;
 const TUPLE_FIELD_TYPE_SHIFT: usize = 4;
-
-pub trait DisplayBinary {
-    fn display_bin(&self) -> Vec<String>;
-}
 
 impl DisplayBinary for [u8] {
     fn display_bin(&self) -> Vec<String> {
@@ -28,20 +26,16 @@ impl DisplayBinary for Vec<u8> {
     }
 }
 
-pub trait Serializable: Sized {
-    type Error;
-    fn serialize(&self) -> Vec<u8>;
-    fn deserialize(bytes: &[u8]) -> Result<Self, Self::Error>;
-}
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub enum TupleField {
     Int(Option<i32>),
     Float(Option<f32>),
     Undefined,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, PartialOrd)]
 pub struct Tuple {
     name: String,
     fields: Vec<TupleField>,
@@ -113,21 +107,21 @@ impl Tuple {
         let name = &name[1..name.len() - 1];
         let mut fields = vec![];
 
-        println!(
-            "[FROM_STR] tokens vec: {:?}",
-            tokens.clone().collect::<Vec<_>>()
-        );
+        // println!(
+        //     "[FROM_STR] tokens vec: {:?}",
+        //     tokens.clone().collect::<Vec<_>>()
+        // );
 
         for token in tokens {
             let token = token.trim();
-            println!("[FROM_STR] token: {token}");
+            // println!("[FROM_STR] token: {token}");
             fields.push(match token {
                 "undefined" | "?" => TupleField::Undefined,
                 _ => {
                     let mid = token.find(' ').ok_or(TupleParseError::InvalidFormat)?;
                     let (typename, str_value) = token.split_at(mid);
                     let (typename, str_value) = (typename.trim(), str_value.trim());
-                    println!("typename: {:?}, str_value: {:?}", typename, str_value);
+                    // println!("typename: {:?}, str_value: {:?}", typename, str_value);
 
                     match typename {
                         "int" => TupleField::Int(match str_value.trim() {

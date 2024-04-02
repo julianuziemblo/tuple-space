@@ -1,9 +1,10 @@
-use tuple::tuple::{DisplayBinary, Tuple, TupleField};
+use tuple::tuple::{Tuple, TupleField};
 
-use crate::tuple::tuple::Serializable;
+use crate::util::{Serializable, DisplayBinary};
 
 mod tuple;
 mod tuple_space;
+mod util;
 
 fn main() {
     let mut t1 = Tuple::new("t1", 2);

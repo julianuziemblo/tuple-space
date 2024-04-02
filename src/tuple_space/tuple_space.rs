@@ -1,4 +1,4 @@
-use crate::tuple::tuple::{Serializable, Tuple};
+use crate::{tuple::tuple::Tuple, util::Serializable};
 
 // TUPLE SPACE REQUEST TYPES
 const TS_REQ_EMPTY: u8 = 0b000;
@@ -32,21 +32,28 @@ type Uuid = u32;
 // num:     24 bits
 // tuple:   variable number of bytes
 // parity:   8 bits
+#[derive(Clone, Debug, PartialEq, PartialOrd)]
 pub struct TuplePacket {
     req_type: u8,
     flags: u8,
     num: Uuid,
     tuple: Option<Tuple>,
-    parity: Option<u8>,
+    checksum: Option<u8>,
 }
 
 impl TuplePacket {
     fn packet_uuid() -> Uuid {
-        todo!("Generate random number")
+        rand::random::<u32>() % (2u32.pow(24) - 1)
     }
 
-    pub fn calculate_parity(&self) -> u8 {
-        todo!("Calculate parity based on self.as_bytes()");
+    pub fn calculate_checksum(&self) -> u8 {
+        self.req_type.count_ones() as u8
+            + self.flags.count_ones() as u8
+            + self.num.count_ones() as u8
+            + match &self.tuple {
+                Some(t) => t.serialize().iter().map(|e| e.count_ones()).sum(),
+                None => 0,
+            } as u8
     }
 
     pub fn empty() -> Self {
@@ -55,7 +62,7 @@ impl TuplePacket {
             flags: 0,
             num: Self::packet_uuid(),
             tuple: None,
-            parity: None,
+            checksum: None,
         }
     }
 
@@ -65,7 +72,7 @@ impl TuplePacket {
             flags: flags.unwrap_or(0),
             num: Self::packet_uuid(),
             tuple: Some(tuple),
-            parity: None,
+            checksum: None,
         }
     }
 }
@@ -85,9 +92,7 @@ impl Serializable for TuplePacket {
         res.push(self.req_type << 5 & self.flags);
 
         // num
-        for i in (0..3).rev() {
-            res.push(((self.num << (i * 8)) & 0b1111_1111) as u8);
-        }
+        res.extend(&self.num.to_be_bytes()[1..]);
 
         // tuple (if it exists)
         if let Some(t) = &self.tuple {
@@ -95,7 +100,7 @@ impl Serializable for TuplePacket {
         }
 
         // parity
-        res.push(self.calculate_parity());
+        res.push(self.calculate_checksum());
 
         return res;
     }
@@ -108,14 +113,11 @@ impl Serializable for TuplePacket {
         res.flags = bytes[0] & 0b0001_1111;
 
         // num
-        res.num = 0;
-        for i in 0..3 {
-            res.num += (bytes[i + 1] as u32) << ((3 - 1 - i) * 8);
-        }
+        res.num = u32::from_be_bytes([0, bytes[1], bytes[2], bytes[3]]);
 
         // parity
         let &par = bytes.last().ok_or(())?;
-        res.parity = Some(par);
+        res.checksum = Some(par);
 
         // tuple
         let tup = Tuple::deserialize(&bytes[4..bytes.len() - 1]);
@@ -130,16 +132,49 @@ impl Serializable for TuplePacket {
 
 #[cfg(test)]
 mod tests {
-    use crate::tuple::tuple::{DisplayBinary, Serializable, Tuple};
+    use crate::{
+        tuple::tuple::Tuple,
+        util::{DisplayBinary, Serializable},
+    };
 
     use super::TuplePacket;
 
+    #[inline(always)]
+    fn test_serialize(tuple: Tuple) {
+        let mut packet = TuplePacket::new(tuple, 0, None);
+        // println!("packet: {:?}", packet);
+        packet.checksum = Some(packet.calculate_checksum());
+        // println!("checksum: {}", packet.calculate_checksum());
+
+        let packet_ser = packet.serialize();
+        // println!("serialized packet: {:?}", packet_ser.display_bin());
+
+        let packet_des = TuplePacket::deserialize(&packet_ser).unwrap();
+        // println!("deserialized packet: {:?}", packet_des);
+        assert_eq!(packet, packet_des);
+    }
+
     #[test]
-    fn serialize_test() {
+    fn serialize_test1() {
         let tuple = Tuple::from_str("('tuple1', int 123, float 32, int ?)").unwrap();
-        let packet = TuplePacket::new(tuple, 0, None);
-        
-        let packet_ser = packet.serialize().display_bin();
-        println!("serialized packet: {packet_ser:?}");
+        // println!("Tuple: {:?}", tuple);
+
+        test_serialize(tuple);        
+    }
+
+    #[test]
+    fn serialize_test2() {
+        let tuple = Tuple::from_str("('tuple2')").unwrap();
+        // println!("Tuple: {:?}", tuple);
+
+        test_serialize(tuple);
+    }
+
+    #[test]
+    fn serialize_test3() {
+        let tuple = Tuple::from_str("('tuple3', int ?, float ?, float 2137)").unwrap();
+        // println!("Tuple: {:?}", tuple);
+
+        test_serialize(tuple);
     }
 }
