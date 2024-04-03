@@ -375,6 +375,6 @@ mod tests {
         let tuple = Tuple::from_str("('t1', int 123, float 213.7)").unwrap();
         let tuple_template = Tuple::from_str("('t1', float 213.7, int 123)").unwrap();
 
-        assert!(! tuple.matches(&tuple_template))
+        assert!(!tuple.matches(&tuple_template))
     }
 }

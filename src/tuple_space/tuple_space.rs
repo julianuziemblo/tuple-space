@@ -66,7 +66,7 @@ pub struct TuplePacket {
 
 impl TuplePacket {
     fn packet_uuid() -> Uuid {
-        rand::random::<u32>() % (2u32.pow(24) - 1)
+        rand::random::<u32>() % 2u32.pow(24)
     }
 
     pub fn calculate_checksum(&self) -> u8 {
@@ -100,6 +100,38 @@ impl TuplePacket {
     }
 }
 
+#[derive(Clone, Debug, PartialEq, PartialOrd)]
+pub struct TuplePacketBuilder {
+    tuple_packet: TuplePacket,
+}
+
+impl TuplePacketBuilder {
+    pub fn new() -> Self {
+        Self {
+            tuple_packet: TuplePacket::empty(),
+        }
+    }
+
+    pub fn req_type(mut self, req_type: u8) -> Self {
+        self.tuple_packet.req_type = req_type;
+        self
+    }
+
+    pub fn flags(mut self, flags: u8) -> Self {
+        self.tuple_packet.flags = flags;
+        self
+    }
+
+    pub fn tuple(mut self, tuple: Tuple) -> Self {
+        self.tuple_packet.tuple = Some(tuple);
+        self
+    }
+
+    pub fn build(self) -> TuplePacket {
+        self.tuple_packet
+    }
+}
+
 // req_type: 3 bits
 // flags:    5 bits
 // num:     24 bits
@@ -125,7 +157,7 @@ impl Serializable for TuplePacket {
         // parity
         res.push(self.calculate_checksum());
 
-        return res;
+        res
     }
 
     fn deserialize(bytes: &[u8]) -> Result<Self, Self::Error> {
@@ -160,7 +192,8 @@ mod tests {
         util::{DisplayBinary, Serializable},
     };
 
-    use super::TuplePacket;
+    use super::{TuplePacket, TS_REQ_EMPTY};
+    use super::{TuplePacketBuilder, TS_FLAG_HELLO};
 
     #[inline(always)]
     fn test_serialize(tuple: Tuple) {
@@ -182,7 +215,7 @@ mod tests {
         let tuple = Tuple::from_str("('tuple1', int 123, float 32, int ?)").unwrap();
         // println!("Tuple: {:?}", tuple);
 
-        test_serialize(tuple);        
+        test_serialize(tuple);
     }
 
     #[test]
@@ -199,5 +232,19 @@ mod tests {
         // println!("Tuple: {:?}", tuple);
 
         test_serialize(tuple);
+    }
+
+    #[test]
+    fn tuple_packet_builder_test() {
+        let tuple_packet1 = TuplePacketBuilder::new()
+            .req_type(TS_REQ_EMPTY)
+            .flags(TS_FLAG_HELLO)
+            .build();
+        let mut tuple_packet2 = TuplePacket::empty();
+        tuple_packet2.req_type = TS_REQ_EMPTY;
+        tuple_packet2.flags = TS_FLAG_HELLO;
+
+        println!("tuple_packet1: {tuple_packet1:?}");
+        println!("tuple_packet2: {tuple_packet2:?}");
     }
 }
