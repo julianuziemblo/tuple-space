@@ -62,7 +62,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "tuple-space-rust"
+name = "tuple_space"
 version = "0.1.0"
 dependencies = [
  "rand",

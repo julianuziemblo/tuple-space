@@ -1,30 +1,7 @@
 use std::ops::{Index, IndexMut};
 
-use crate::util::{DisplayBinary, Serializable};
-
-const TUPLE_NAME_MAX_SIZE: usize = 31;
-
-const TUPLE_TYPE_UNDEFINED: u8 = 0b000;
-const TUPLE_TYPE_INT: u8 = 0b001;
-const TUPLE_TYPE_FLOAT: u8 = 0b010;
-
-const TUPLE_FIELD_OCCUPIED_YES: u8 = 0b1;
-const TUPLE_FIELD_OCCUPIED_NO: u8 = 0b0;
-
-const TUPLE_FIELD_OCCUPIED_SHIFT: usize = 7;
-const TUPLE_FIELD_TYPE_SHIFT: usize = 4;
-
-impl DisplayBinary for [u8] {
-    fn display_bin(&self) -> Vec<String> {
-        self.iter().map(|&e| format!("{e:08b}")).collect()
-    }
-}
-
-impl DisplayBinary for Vec<u8> {
-    fn display_bin(&self) -> Vec<String> {
-        self.iter().map(|&e| format!("{e:08b}")).collect()
-    }
-}
+use crate::tuple::consts::*;
+use crate::util::Serializable;
 
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub enum TupleField {
@@ -33,17 +10,17 @@ pub enum TupleField {
     Undefined,
 }
 
-#[derive(Clone, Debug, PartialEq, PartialOrd)]
+#[derive(Clone, Debug, Default, PartialEq, PartialOrd)]
 pub struct Tuple {
-    name: String,
-    fields: Vec<TupleField>,
+    pub name: String,
+    pub fields: Vec<TupleField>,
 }
 
 impl Tuple {
-    pub fn new(name: &str, size: usize) -> Self {
+    pub fn new(name: &str, size: u8) -> Self {
         Tuple {
             name: name.to_string(),
-            fields: vec![TupleField::Undefined; size],
+            fields: vec![TupleField::Undefined; size as usize],
         }
     }
 
@@ -77,7 +54,7 @@ impl IndexMut<usize> for Tuple {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Copy, Debug)]
 pub enum TupleParseError {
     InvalidFormat,
     NameError,
@@ -85,13 +62,15 @@ pub enum TupleParseError {
     ValueParseError,
 }
 
-impl Tuple {
+impl std::str::FromStr for Tuple {
+    type Err = TupleParseError;
+
     /*
      *  Return a [tuple_template] created from a given tuple_string.
      *  tuple_string: a string with format: `("[name]", [type] [value]/?, ...)`
      *  Example: `("test", int 123, float ?)`
      */
-    pub fn from_str(s: &str) -> Result<Self, TupleParseError> {
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
         if s.is_empty() {
             return Err(TupleParseError::NameError);
         }
@@ -147,7 +126,9 @@ impl Tuple {
             fields,
         })
     }
+}
 
+impl Tuple {
     /*
      * Determines if a tuple matches another tuple (prefferably: a template one).
      */
@@ -188,6 +169,7 @@ impl Tuple {
 
 impl Serializable for Tuple {
     type Error = TupleParseError;
+
     fn serialize(&self) -> Vec<u8> {
         let mut res = vec![];
 
@@ -263,7 +245,7 @@ impl Serializable for Tuple {
             return Err(TupleParseError::NameError);
         }
 
-        let name = match name_accum.parse::<String>() {
+        let name = match name_accum.parse() {
             Ok(v) => v,
             Err(_) => return Err(TupleParseError::NameError),
         };
@@ -326,12 +308,40 @@ impl Serializable for Tuple {
     }
 }
 
+#[derive(Clone, Debug)]
+pub struct TupleBuilder {
+    tuple: Tuple,
+}
+
+impl TupleBuilder {
+    pub fn new() -> Self {
+        TupleBuilder {
+            tuple: Default::default(),
+        }
+    }
+
+    pub fn name(mut self, name: &str) -> Self {
+        self.tuple.name = name.to_owned();
+        self
+    }
+
+    pub fn field(mut self, field: TupleField) -> Self {
+        self.tuple.fields.push(field);
+        self
+    }
+
+    pub fn build(self) -> Tuple {
+        self.tuple
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use crate::{
         tuple::tuple::{Tuple, TupleField},
         util::Serializable,
     };
+    use std::str::FromStr;
 
     #[test]
     fn tuple_creation_test() {

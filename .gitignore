@@ -1,1 +1,4 @@
-/target
+/target/
+/tuple_space/target/
+/server/target/
+/client/target/
