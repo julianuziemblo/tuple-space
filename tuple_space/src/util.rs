@@ -100,7 +100,7 @@ impl std::fmt::Display for TakeIndexError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "The provided index {} is outside of the bounds of the provided collection.",
+            "TakeIndexError: The provided index {} is outside of the bounds of the provided collection.",
             self.0
         )
     }
