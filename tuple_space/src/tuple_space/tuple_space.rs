@@ -1,4 +1,8 @@
+use std::{cell::RefCell, rc::Rc};
+
 use crate::tuple::tuple::Tuple;
+
+type TupleTrieNodeRef = Rc<RefCell<TupleTrieNode>>;
 
 #[derive(Debug)]
 pub struct TupleSpace {
@@ -15,11 +19,18 @@ impl TupleSpace {
     pub fn add(&mut self, tuple: Tuple) {
         self.space.add(tuple)
     }
+
+    pub fn get_root_val(&self) -> Option<Tuple> {
+        match &self.space.root {
+            Some(root) => todo!(),
+            None => todo!(),
+        }
+    }
 }
 
 #[derive(Debug)]
 struct TupleTrie {
-    root: Option<*mut TupleTrieNode>,
+    root: Option<TupleTrieNodeRef>,
 }
 
 impl TupleTrie {
@@ -28,19 +39,19 @@ impl TupleTrie {
     }
 
     fn add(&mut self, tuple: Tuple) {
-        match self.root {
+        match &self.root {
             Some(root) => {
                 todo!();
             }
-            None => self.root = Some(&mut TupleTrieNode::new(tuple)),
+            None => self.root = Some(Rc::new(RefCell::new(TupleTrieNode::new(tuple)))),
         }
     }
 }
 
-#[derive(Debug, Default)]
+#[derive(Clone, Debug, Default)]
 struct TupleTrieNode {
-    left: Option<*mut TupleTrieNode>,
-    right: Option<*mut TupleTrieNode>,
+    left: Option<TupleTrieNodeRef>,
+    right: Option<TupleTrieNodeRef>,
     value: Tuple,
 }
 
@@ -51,5 +62,19 @@ impl TupleTrieNode {
             right: None,
             value,
         }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use crate::tuple::tuple::Tuple;
+
+    use super::TupleSpace;
+
+    #[test]
+    fn test1() {
+        let mut ts = TupleSpace::new();
+        ts.add(Tuple::default());
+        println!("Tuple space: {ts:?}");
     }
 }
