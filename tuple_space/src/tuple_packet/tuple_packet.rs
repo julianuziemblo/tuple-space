@@ -148,8 +148,7 @@ impl Serializable for TuplePacket {
                 & 0b0001_1111,
 
             num: u32::from_be_bytes(
-                take_first_n_const(bytes)
-                    .map_err(|_| TuplePacketError::InvalidLength(bytes.len()))?,
+                take_first_n_const(bytes).map_err(|e| TuplePacketError::InvalidLength(e.0))?,
             ),
 
             checksum: Some(*bytes.last().ok_or(TuplePacketError::InvalidLength(0))?),

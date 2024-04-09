@@ -52,7 +52,11 @@ pub fn take_first_n_const<'a, T, const N: usize>(
 where
     [T; N]: std::convert::TryFrom<&'a [T]>,
 {
-    collection.try_into().map_err(|_| TakeIndexError(N))
+    if collection.len() >= N {
+        collection[..N].try_into().map_err(|_| TakeIndexError(N))
+    } else {
+        Err(TakeIndexError(N))
+    }
 }
 
 pub fn take_range<T, R>(collection: &[T], range: R) -> Result<&[T], TakeIndexError>
@@ -89,7 +93,7 @@ where
 }
 
 #[derive(Clone, Copy, Debug)]
-pub struct TakeIndexError(usize);
+pub struct TakeIndexError(pub usize);
 
 impl std::fmt::Display for TakeIndexError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
