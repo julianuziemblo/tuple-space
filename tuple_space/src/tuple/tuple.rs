@@ -38,6 +38,10 @@ impl Tuple {
     pub fn len(&self) -> usize {
         self.fields.len()
     }
+
+    pub fn is_empty(&self) -> bool {
+        self.fields.is_empty()
+    }
 }
 
 impl Index<usize> for Tuple {
@@ -52,14 +56,6 @@ impl IndexMut<usize> for Tuple {
     fn index_mut(&mut self, index: usize) -> &mut Self::Output {
         &mut self.fields[index]
     }
-}
-
-#[derive(Clone, Copy, Debug)]
-pub enum TupleParseError {
-    InvalidFormat,
-    NameError,
-    UnsupportedTypename,
-    ValueParseError,
 }
 
 impl std::str::FromStr for Tuple {
@@ -115,7 +111,7 @@ impl std::str::FromStr for Tuple {
                                 Err(_) => return Err(TupleParseError::ValueParseError),
                             }),
                         }),
-                        _ => return Err(TupleParseError::UnsupportedTypename),
+                        _ => return Err(TupleParseError::UnsupportedType),
                     }
                 }
             });
@@ -307,6 +303,31 @@ impl Serializable for Tuple {
         Ok(Self { name, fields })
     }
 }
+
+#[derive(Clone, Copy, Debug)]
+pub enum TupleParseError {
+    InvalidFormat,
+    NameError,
+    UnsupportedType,
+    ValueParseError,
+}
+
+impl std::fmt::Display for TupleParseError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "TupleParseError::{}",
+            match self {
+                TupleParseError::InvalidFormat => "InvalidFormat: The provided tuple representation has invalid format.".to_string(),
+                TupleParseError::NameError => format!("NameError: The provided tuple representation has invalid name or invalid name length. Max name length: {}", TUPLE_NAME_MAX_SIZE),
+                TupleParseError::UnsupportedType => "UnsupportedTypename: The provided tuple representation has a field of unsupported type.".to_string(),
+                TupleParseError::ValueParseError => "ValueParseError: Error while parsing one of the provided tuple representation fields' value.".to_string(),
+            }
+        )
+    }
+}
+
+impl std::error::Error for TupleParseError {}
 
 #[derive(Clone, Debug)]
 pub struct TupleBuilder {

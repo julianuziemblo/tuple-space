@@ -2,3 +2,7 @@
 /tuple_space/target/
 /server/target/
 /client/target/
+/.vscode/
+/tuple_space/.vscode/
+/server/.vscode/
+/client/.vscode/

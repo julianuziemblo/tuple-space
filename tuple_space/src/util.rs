@@ -46,9 +46,6 @@ pub trait Serializable: Sized {
     fn deserialize(bytes: &[u8]) -> Result<Self, Self::Error>;
 }
 
-#[derive(Clone, Copy, Debug)]
-pub struct TakeIndexError(usize);
-
 pub fn take_first_n_const<T, const N: usize>(collection: &[T]) -> Result<[T; N], TakeIndexError>
 where
     T: Copy + Default,
@@ -95,3 +92,18 @@ where
 
     Ok(&collection[range])
 }
+
+#[derive(Clone, Copy, Debug)]
+pub struct TakeIndexError(usize);
+
+impl std::fmt::Display for TakeIndexError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "The provided index {} is outside of the bounds of the provided collection.",
+            self.0
+        )
+    }
+}
+
+impl std::error::Error for TakeIndexError {}
