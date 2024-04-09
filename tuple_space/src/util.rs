@@ -46,18 +46,13 @@ pub trait Serializable: Sized {
     fn deserialize(bytes: &[u8]) -> Result<Self, Self::Error>;
 }
 
-pub fn take_first_n_const<T, const N: usize>(collection: &[T]) -> Result<[T; N], TakeIndexError>
+pub fn take_first_n_const<'a, T, const N: usize>(
+    collection: &'a [T],
+) -> Result<[T; N], TakeIndexError>
 where
-    T: Copy + Default,
+    [T; N]: std::convert::TryFrom<&'a [T]>,
 {
-    let mut taken = [T::default(); N];
-
-    #[allow(clippy::needless_range_loop)]
-    for i in 0..N {
-        taken[i] = *collection.get(i).ok_or(TakeIndexError(i))?;
-    }
-
-    Ok(taken)
+    collection.try_into().map_err(|_| TakeIndexError(N))
 }
 
 pub fn take_range<T, R>(collection: &[T], range: R) -> Result<&[T], TakeIndexError>
