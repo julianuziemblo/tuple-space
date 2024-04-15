@@ -1,3 +1,4 @@
+use std::cmp::Ordering;
 use std::ops::{Index, IndexMut};
 
 use crate::tuple::consts::*;
@@ -17,7 +18,14 @@ pub struct Tuple {
 }
 
 impl Tuple {
-    pub fn new(name: &str, size: u8) -> Self {
+    pub fn new(name: &str) -> Self {
+        Tuple {
+            name: name.to_string(),
+            fields: vec![],
+        }
+    }
+
+    pub fn with_capacity(name: &str, size: u8) -> Self {
         Tuple {
             name: name.to_string(),
             fields: vec![TupleField::Undefined; size as usize],
@@ -160,6 +168,32 @@ impl Tuple {
         }
 
         true
+    }
+
+    /// Compares two tuples by their binary representations
+    pub fn cmp_binary(&self, other: &Tuple) -> Ordering {
+        let (tuple1, tuple2) = (self.serialize(), other.serialize());
+        Tuple::cmp_serialized(&tuple1, &tuple2)
+    }
+
+    /// Compares two binary representations of tuples (serialized tuples)
+    #[allow(clippy::comparison_chain)]
+    pub fn cmp_serialized(tuple1: &[u8], tuple2: &[u8]) -> Ordering {
+        for (&t1, &t2) in tuple1.iter().zip(tuple2.iter()) {
+            if t1 > t2 {
+                return Ordering::Greater;
+            } else if t1 < t2 {
+                return Ordering::Less;
+            }
+        }
+
+        if tuple1.len() > tuple2.len() {
+            Ordering::Greater
+        } else if tuple1.len() < tuple2.len() {
+            Ordering::Less
+        } else {
+            Ordering::Equal
+        }
     }
 }
 
@@ -329,7 +363,7 @@ impl std::fmt::Display for TupleParseError {
 
 impl std::error::Error for TupleParseError {}
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 pub struct TupleBuilder {
     tuple: Tuple,
 }
@@ -366,7 +400,7 @@ mod tests {
 
     #[test]
     fn tuple_creation_test() {
-        let mut tuple_manual = Tuple::new("t1", 2);
+        let mut tuple_manual = Tuple::new("t1");
         tuple_manual.insert(0, TupleField::Float(Some(6.276)));
         tuple_manual.insert(1, TupleField::Int(None));
 

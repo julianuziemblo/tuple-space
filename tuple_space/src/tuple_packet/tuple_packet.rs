@@ -62,16 +62,14 @@ impl Default for TuplePacket {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, PartialOrd)]
+#[derive(Clone, Debug, Default, PartialEq, PartialOrd)]
 pub struct TuplePacketBuilder {
     tuple_packet: TuplePacket,
 }
 
 impl TuplePacketBuilder {
     pub fn new() -> Self {
-        Self {
-            tuple_packet: Default::default(),
-        }
+        Self::default()
     }
 
     pub fn req_type(mut self, req_type: u8) -> Self {

@@ -83,7 +83,7 @@ impl<const N: usize> Server<N> {
                     _ => todo!("Implement handling other requiests"),
                 },
                 Err(e) => TuplePacket::new(
-                    Tuple::new(&format!("{e:?}"), 0),
+                    Tuple::new(&format!("{e:?}")),
                     TS_REQ_EMPTY,
                     Some(TS_FLAG_ERR),
                 ),
