@@ -19,6 +19,18 @@ impl TupleSpace {
         self.space.add(tuple)
     }
 
+    pub fn remove(&mut self, tuple_template: &Tuple) {
+        self.space.remove(tuple_template)
+    }
+
+    fn find(&self, tuple_template: &Tuple) -> Option<Tuple> {
+        self.space.find(tuple_template)
+    }
+
+    fn withdraw(&mut self, tuple_template: &Tuple) -> Option<Tuple> {
+        self.space.withdraw(tuple_template)
+    }
+
     pub fn get_root_val(&self) -> Option<Tuple> {
         self.space
             .root
@@ -63,26 +75,44 @@ impl TupleTrie {
     ///   - jeśli tak, to patrzymy, czy jest większy czy mniejszy, i tam przechodzimy
     ///   - jeśli nie, to dodajemy tam wartość
     /// ZASTANOWIĆ SIĘ: funkcja zwraca głębokość, na którą weszła
-    pub fn add(&mut self, tuple: Tuple) {
+    fn add(&mut self, tuple: Tuple) {
         match &self.root {
             Some(root) => {
                 let found = Self::add_internal(Some(root.clone()), root.clone(), tuple);
                 println!("Was this tuple already in space: {}", !found);
-                if !found {
+                if found {
                     self.size += 1;
                 }
             }
-            None => self.root = Some(Rc::new(RefCell::new(TupleTrieNode::new(tuple)))),
+            None => {
+                self.root = Some(Rc::new(RefCell::new(TupleTrieNode::new(tuple))));
+                self.size += 1
+            }
         }
     }
 
-    pub fn remove(&self, tuple_template: &Tuple) {
-        todo!()
+    /// Removes a tuple matching a template from
+    /// the tuple space.
+    ///
+    /// The trie is searched depth-first, so
+    /// the occurance with most matching bytes
+    /// in binary form is removed.
+    fn remove(&self, tuple_template: &Tuple) {
+        todo!("implement remove()")
     }
 
-    pub fn find(&self, tuple_template: &Tuple) {
-        todo!()
+    fn find(&self, tuple_template: &Tuple) -> Option<Tuple> {
+        todo!("implement find()")
     }
+
+    fn withdraw(&mut self, tuple_template: &Tuple) -> Option<Tuple> {
+        todo!("implement withdraw()")
+    }
+}
+
+enum TreeNode {
+    Left,
+    Right,
 }
 
 impl TupleTrie {
@@ -91,28 +121,48 @@ impl TupleTrie {
         parent: TupleTrieNodeRef,
         tuple: Tuple,
     ) -> bool {
-        println!("Node: {node:?}");
-        println!("Parent: {parent:?}");
+        // println!("Node: {node:?}");
+        // println!("Parent: {parent:?}");
         let mut parent = parent;
         let mut current_node = node;
+        let mut tree_node = TreeNode::Left;
+
         while let Some(node) = current_node.clone() {
             match node.borrow().value.cmp_binary(&tuple) {
                 Ordering::Greater => {
-                    println!("Going right");
+                    // println!("Going right");
                     current_node = node.borrow().clone().right;
+                    tree_node = TreeNode::Right;
                 }
                 Ordering::Less => {
-                    println!("Going left");
+                    // println!("Going left");
                     current_node = node.borrow().clone().left;
+                    tree_node = TreeNode::Left;
                 }
                 Ordering::Equal => return false,
             };
             parent = node.clone();
         }
 
-        println!("Inserting");
-        parent.borrow_mut().left = Some(Rc::new(RefCell::new(TupleTrieNode::new(tuple.clone()))));
+        // println!("Inserting");
+        match tree_node {
+            TreeNode::Left => {
+                parent.borrow_mut().left =
+                    Some(Rc::new(RefCell::new(TupleTrieNode::new(tuple.clone()))))
+            }
+            TreeNode::Right => {
+                parent.borrow_mut().right =
+                    Some(Rc::new(RefCell::new(TupleTrieNode::new(tuple.clone()))))
+            }
+        }
+
         true
+    }
+}
+
+impl ToString for TupleTrie {
+    fn to_string(&self) -> String {
+        todo!()
     }
 }
 
@@ -157,13 +207,12 @@ mod test {
     #[test]
     fn test1() {
         let mut ts = TupleSpace::new();
-        ts.add(Tuple::default());
         ts.add(Tuple::new("t1"));
         ts.add(Tuple::new("t3"));
         ts.add(Tuple::new("a1"));
         ts.add(Tuple::new("t2"));
         ts.add(Tuple::new("t2"));
 
-        println!("Tuple space: {ts:?}");
+        println!("Tuple space: {ts:#?}");
     }
 }
