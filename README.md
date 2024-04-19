@@ -9,3 +9,5 @@ The implementation consists of:
 # System specification
 All of the tuple space's features have been thoroughly described in [this article](https://github.com/julianuziemblo/tuple-space/files/15044712/Julian_Uziemblo_Przestrzen_krotek_Linda_-_realizacja_projektu_Warszawa_2024.pdf) (in Polish). 
 
+## Simple packet
+![tuple packet](https://github.com/julianuziemblo/tuple-space/assets/120249104/10361228-ab0d-4616-b290-83ac7aeadc10)
