@@ -1,5 +1,5 @@
 # Tuple Space
-An implementation of a custom tuple space protocol - a logical space for sharing data between programs, written in Rust. This project is <u>still under developement</u>, so many things may change.
+An implementation of a custom tuple space protocol - a logical space for sharing data between programs, written in Rust. This project is _still under developement_, so many things may change.
 
 The implementation consists of:
 - `tuple_space`: the tuple space API. Contains useful functions for making and sending tuples between the participants.
