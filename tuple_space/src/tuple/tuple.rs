@@ -442,4 +442,13 @@ mod tests {
 
         assert!(!tuple.matches(&tuple_template))
     }
+
+    #[test]
+    fn mem_layout_test() {
+        let ser1 = Tuple::default().serialize();
+        let ser2 = Tuple::new("").serialize();
+        // println!("tuple default serialized: {:b}", SliceU8(&ser1));
+        // println!("tuple t1 serialized: {:b}", SliceU8(&ser2));
+        assert_eq!(ser1, ser2)
+    }
 }

@@ -185,24 +185,9 @@ impl TupleTrieNode {
 
 #[cfg(test)]
 mod test {
-    use crate::{
-        tuple::tuple::Tuple,
-        util::{Serializable, SliceU8},
-    };
+    use crate::tuple::tuple::Tuple;
 
     use super::TupleSpace;
-
-    #[test]
-    fn mem_layout_test() {
-        println!(
-            "tuple default serialized: {:b}",
-            SliceU8(&Tuple::default().serialize())
-        );
-        println!(
-            "tuple t1 serialized: {:b}",
-            SliceU8(&Tuple::new("t1").serialize())
-        );
-    }
 
     #[test]
     fn test1() {
